@@ -31,7 +31,7 @@ def clean(s: str) -> str:
     # Trim leading/trailing whitespace & lowercase
     return s.strip().lower()
 
-# Knowledge base dictionary
+# Knowledge base dictionary (value format: [answer, topic/source])
 knowledge = {
     "ما هي الإجارة؟": ["الإجارة هي عقد تمويل مبني على استئجار الأصول.", "مستندات الشركة"],
     "ما هي الشروط؟": ["يشترط توفر الأصول ووضوح المدة.", "دليل السياسات"],
@@ -61,3 +61,16 @@ def ask_question(q: str = None):
             "suggestions": list(knowledge.keys())[:5]
         }
     )
+
+# Task 3: Metrics endpoint to track questions per topic
+@app.get("/metrics")
+def get_metrics():
+    by_topic = {}
+    for key, val in knowledge.items():
+        topic = val[1]  # Topic/source field
+        by_topic[topic] = by_topic.get(topic, 0) + 1
+        
+    return {
+        "total_questions": len(knowledge),
+        "by_topic": by_topic
+    }
