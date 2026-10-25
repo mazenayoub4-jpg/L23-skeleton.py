@@ -9,6 +9,15 @@
 # ════════════════════════════════════════════════════════════
 # Install dependencies from a terminal, not as Python code:
 # pip install fastapi uvicorn
+from fastapi import FastAPI, HTTPException
+
+app = FastAPI(title="My Project")
+
+# Your knowledge dictionary goes here
+knowledge = {
+    # your data...
+}
+
 @app.get("/ask")
 def ask_question(q: str = None):
     if q in knowledge:
@@ -17,7 +26,7 @@ def ask_question(q: str = None):
         raise HTTPException(
             status_code=404,
             detail={
-                "message": "Answer not found for your query.",
+                "message": "ما لقيت جواب لـ: " + str(q),
                 "suggestions": list(knowledge.keys())[:5]
             }
         )
