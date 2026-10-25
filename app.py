@@ -9,24 +9,77 @@
 # ════════════════════════════════════════════════════════════
 # Install dependencies from a terminal, not as Python code:
 # pip install fastapi uvicorn
-from fastapi import FastAPI, HTTPException
-
 app = FastAPI(title="My Project")
 
-# Your knowledge dictionary goes here
+# Your knowledge dictionary
 knowledge = {
-    # your data...
+    # Make sure your knowledge items are here...
 }
 
 @app.get("/ask")
 def ask_question(q: str = None):
-    if q in knowledge:
-        return {"answer": knowledge[q][0], "source": knowledge[q][1]}
-    else:
+    if not q:
         raise HTTPException(
             status_code=404,
             detail={
-                "message": "ما لقيت جواب لـ: " + str(q),
+                "message": "لا يوجد سؤال",
                 "suggestions": list(knowledge.keys())[:5]
             }
         )
+    
+    cleaned_q = clean(q)
+    
+    for key, val in knowledge.items():
+        if clean(key) == cleaned_q:
+            return {"answer": val[0], "source": val[1]}
+            
+    raise HTTPException(
+        status_code=404,
+        detail={
+            "message": f"ما لقيت جواب لـ: {q}",
+            "suggestions": list(knowledge.keys())[:5]
+        }
+    )
+    import re
+
+def clean(s: str) -> str:
+    # Remove Tashkeel (Arabic diacritics)
+    s = re.sub(r'[\u064B-\u0652]', '', s)
+    
+    # Normalize Alif / Hamzas
+    s = re.sub(r'[إأآ]', 'ا', s)
+    
+    # Normalize Taa Marbouta to Ha
+    s = s.replace('ة', 'ه')
+    
+    # Normalize Alif Maqsoora to Ya
+    s = s.replace('ى', 'ي')
+    
+    # Trim leading/trailing whitespace & lowercase
+    return s.strip().lower()
+    @app.get("/ask")
+def ask_question(q: str = None):
+    if not q:
+        raise HTTPException(
+            status_code=404,
+            detail={
+                "message": "لا يوجد سؤال",
+                "suggestions": list(knowledge.keys())[:5]
+            }
+        )
+    
+    cleaned_q = clean(q)
+    
+    # Check for a match after normalizing
+    for key, val in knowledge.items():
+        if clean(key) == cleaned_q:
+            return {"answer": val[0], "source": val[1]}
+            
+    # If no match found, return 404 with suggestions
+    raise HTTPException(
+        status_code=404,
+        detail={
+            "message": f"ما لقيت جواب لـ: {q}",
+            "suggestions": list(knowledge.keys())[:5]
+        }
+    )
